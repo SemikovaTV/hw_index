@@ -93,13 +93,24 @@ CREATE INDEX payment_date ON payment(payment_date)
 ```
 Получаем итоговый вариант запроса:
 ```sql
-SELECT DISTINCT CONCAT (c.last_name, ' ', c.first_name) AS fio, SUM(p.amount)
-FROM payment p, rental r, customer c, inventory i
-WHERE DATE(p.payment_date) = '2005-07-30' AND p.payment_date =r.rental_date AND r.customer_id=c.customer_id AND i.inventory_id =r.inventory_id
+EXPLAIN ANALYZE
+SELECT CONCAT (c.last_name, ' ', c.first_name) AS fio, SUM(p.amount)
+FROM payment p
+inner join rental r on p.payment_date = r.rental_date
+inner join customer c on r.customer_id = c.customer_id
+inner join inventory i on i.inventory_id =r.inventory_id
+WHERE p.payment_date >= '2005-07-30' AND p.payment_date < DATE_ADD('2005-07-30', INTERVAL 1 DAY )
 GROUP BY fio
 ```
-![alt text](https://github.com/SemikovaTV/hw_index/blob/main/2.jpg)
-Видим что индекс используется
+```
+Limit: 200 row(s)  (actual time=6.24..6.27 rows=200 loops=1)¶
+-> Table scan on <temporary>  (actual time=6.24..6.26 rows=200 loops=1)¶
+-> Aggregate using temporary table  (actual time=6.23..6.23 rows=391 loops=1)¶
+-> Nested loop in|
+
+```
+![alt text](https://github.com/SemikovaTV/hw_index/blob/main/3.jpg)
+
 
 Скрипт - [ссылка](https://github.com/SemikovaTV/hw_index/blob/main/script.sql)
 
